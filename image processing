@@ -1,0 +1,86 @@
+% Step 1: Get the image file using uigetfile
+[file, path] = uigetfile({'*.jpg;*.png;*.jpeg', 'Image Files (*.jpg, *.png, *.jpeg)'});
+if isequal(file, 0)
+    disp('No file selected');
+    return;
+else
+    fullFileName = fullfile(path, file);
+    disp(['User selected: ', fullFileName]);
+end
+
+% Step 2: Read the image
+img = imread(fullFileName);
+
+% Step 3: Display the image and plot a 3x3 grid on it
+figure;
+imshow(img);
+hold on;
+
+% Image size (rows and columns)
+[rows, cols, ~] = size(img);
+
+% Number of rows and columns per grid
+rowDiv = floor(rows / 3);
+colDiv = floor(cols / 3);
+
+% Draw grid lines (horizontal and vertical)
+for i = 1:2
+    % Vertical lines
+    x = colDiv * i;
+    plot([x, x], [0, rows], 'r', 'LineWidth', 0.1);
+    
+    % Horizontal lines
+    y = rowDiv * i;
+    plot([0, cols], [y, y], 'r', 'LineWidth', 0.1);
+end
+
+hold off;
+
+% Step 4: Initialize variables to store grayscale intensities
+grayIntensities = zeros(3, 3);
+
+% Variable to accumulate total grayscale intensity
+totalGrayIntensity = 0;
+
+% Step 5: Loop through each grid, compute the average RGB, and convert to grayscale
+for i = 1:3
+    for j = 1:3
+        % Define grid boundaries
+        rowStart = (i-1) * rowDiv + 1;
+        rowEnd = i * rowDiv;
+        colStart = (j-1) * colDiv + 1;
+        colEnd = j * colDiv;
+        
+        % Extract the sub-image (grid)
+        subImage = img(rowStart:rowEnd, colStart:colEnd, :);
+        
+        % Compute the average RGB values in this grid
+        avgR = mean(mean(subImage(:, :, 1)));
+        avgG = mean(mean(subImage(:, :, 2)));
+        avgB = mean(mean(subImage(:, :, 3)));
+        
+        % Convert the average RGB to grayscale intensity using standard formula
+        grayIntensity = 0.2989 * avgR + 0.5870 * avgG + 0.1140 * avgB;
+        
+        % Store the grayscale intensity
+        grayIntensities(i, j) = grayIntensity;
+        
+        % Accumulate the total grayscale intensity
+        totalGrayIntensity = totalGrayIntensity + grayIntensity;
+    end
+end
+
+% Step 6: Print the 9 grayscale intensities
+disp('Grayscale intensities of the 9 grids:');
+disp(grayIntensities);
+
+% Step 7: Find the grid with the lowest average intensity
+[minValue, minIndex] = min(grayIntensities(:));
+[rowIndex, colIndex] = ind2sub(size(grayIntensities), minIndex);
+
+fprintf('Grid (%d, %d) has the lowest average intensity of %.2f\n', rowIndex, colIndex, minValue);
+
+% Step 8: Calculate and print the overall average grayscale intensity
+averageGrayIntensity = totalGrayIntensity / 9;
+fprintf('The overall average grayscale intensity of the image is: %.2f\n', averageGrayIntensity);
+
